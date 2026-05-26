@@ -11,11 +11,16 @@ app.use(express.json());
 
 app.use(cors());
 
-// mongoose.connect(process.env.DB_URI).then(() => {
-//     console.log(`DB Connected`);
-// }).catch((err) => {
-//     console.log(err.message)
-// })
+//this is mongodb database connection
+mongoose.connect(process.env.DB_URI)
+    .then(() => {
+        console.log("DB Connected");
+    })
+    .catch((err) => {
+        console.error("MongoDB Error:", err);
+    });
+
+//This is base route where first everything comes here and then it goes to authRouter
 app.use("/auth", authRouter)
 
 const port = process.env.PORT;
