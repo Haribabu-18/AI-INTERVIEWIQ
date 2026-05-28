@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, useNavigate } from 'react-router-dom'
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 function Signup() {
     const [formValues, setFormValues] = useState({ name: "", email: "", age: "", phone: "", password: "", confirmPassword: "" })
+
+    const navigate = useNavigate();
 
     function updateFormData(e) {
         const { name, value } = e.target;
@@ -29,21 +31,39 @@ function Signup() {
         e.preventDefault();
 
         if (formValues.password !== formValues.confirmPassword) {
-            toast('Password Does not Match', {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: false,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "colored",
-                // transition: Bounce,
-            });
+            // toast('Password Does not Match', {
+            //     position: "top-right",
+            //     autoClose: 5000,
+            //     hideProgressBar: false,
+            //     closeOnClick: false,
+            //     pauseOnHover: true,
+            //     draggable: true,
+            //     progress: undefined,
+            //     theme: "colored",
+            //     // transition: Bounce,
+            // });
+            return
         }
 
-        const dataFromSignUp = await axios.post("http://localhost/auth/signup");
-        console.log(dataFromSignUp, "data from signup");
+        const body = {
+            name: formValues.name,
+            email: formValues.email,
+            age: formValues.age,
+            phone: formValues.phone,
+            password: formValues.password
+        }
+
+
+        try {
+            const dataFromSignUp = await axios.post("http://localhost:4000/auth/signup", body);
+            console.log(dataFromSignUp, "data from signup");
+
+            navigate("/login");
+
+        } catch (err) {
+            console.log(err.message)
+        }
+
     }
     return (
         <>
@@ -72,6 +92,9 @@ function Signup() {
                     <div>
                         <label htmlFor='confirmPassword'>Confirm Password</label>
                         <input className='border-1' type='password' name='confirmPassword' value={formValues.confirmPassword} id='confirmPassword' onChange={updateFormData} />
+                    </div>
+                    <div>
+                        <input type="Submit" />
                     </div>
                 </form>
             </div>

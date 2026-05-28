@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from "../../utils/generateJwtToken.js";
 
 export const signup = async (req, res) => {
+    console.log("hitting api")
     const { name, age, phone, email, password } = req.body;
 
     try {
@@ -28,6 +29,7 @@ export const signup = async (req, res) => {
         req.body.password = await bcrypt.hash(password, 10)
 
         const newUser = await User.create(req.body);
+        console.log("sending response")
 
         res.status(201).json({ message: "ok", newUser });
 
