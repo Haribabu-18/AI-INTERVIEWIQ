@@ -2,6 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import authRouter from './routes/auth.js'
+import userRouter from './routes/user.js'
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -22,6 +23,8 @@ mongoose.connect(process.env.DB_URI)
 
 //This is base route where first everything comes here and then it goes to authRouter
 app.use("/auth", authRouter)
+
+app.use("/user",userRouter)
 
 const port = process.env.PORT;
 

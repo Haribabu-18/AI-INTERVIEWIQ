@@ -7,7 +7,7 @@ function ProtectedLayout() {
   const userCredentials = localStorage.getItem("user")
   console.log(userCredentials, 'user credentials')
   if (userCredentials) {
-    return <Navigate to="/" />
+    return <Navigate to="/" replace />
   }
   return (
     <>
