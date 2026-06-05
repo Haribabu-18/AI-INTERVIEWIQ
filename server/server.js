@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import authRouter from './routes/auth.js'
 import userRouter from './routes/user.js'
+import interviewRouter from './routes/interview.js'
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -25,6 +26,8 @@ mongoose.connect(process.env.DB_URI)
 app.use("/auth", authRouter)
 
 app.use("/user",userRouter)
+
+app.use("/interview", interviewRouter);
 
 const port = process.env.PORT;
 

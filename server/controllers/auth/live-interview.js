@@ -1,0 +1,34 @@
+import OpenAI from "openai";
+import { GoogleGenAI } from '@google/genai';
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
+export async function liveInterview(req, res) {
+
+    const body = req.body
+    if (!body) {
+        res.status(401).json({ message: "No promt provided" })
+    }
+
+
+    try {
+        const client = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        const response = await client.responses.create({
+            model: 'gpt-5.5',
+            input: body.prompt,
+        });
+
+        console.log(response.output_text);
+
+        res.status(200).json({ message: "ok", data: response.output_text })
+
+    } catch (err) {
+        return res.status(500).json({ message: "Internal server error" })
+
+    }
+}

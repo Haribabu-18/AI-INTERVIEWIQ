@@ -67,7 +67,7 @@ function Signup() {
     }
     return (
         <>
-            <div className='h-screen flex justify-center items-center'>
+            {/* <div className='h-screen flex justify-center items-center'>
                 <form className='flex flex-col gap-2' onSubmit={signUp}>
                     <div>
                         <label htmlFor='name'>Name</label>
@@ -97,6 +97,113 @@ function Signup() {
                         <input type="Submit" />
                     </div>
                 </form>
+            </div> */}
+            <div className="h-screen bg-[#f5f7fb] flex items-center justify-center overflow-hidden">
+                <div className="w-[95%] h-[92vh] max-w-7xl bg-white rounded-3xl shadow-xl overflow-hidden grid lg:grid-cols-2">
+
+                    {/* Left Section */}
+                    <div className="px-10 lg:px-14 py-6 flex flex-col justify-center relative">
+
+                        <div className="absolute top-6 left-6 border border-gray-300 rounded-full px-5 py-2">
+                            <span className="font-semibold text-[#2976DD]">
+                                AI-InterviewIQ
+                            </span>
+                        </div>
+
+                        <div className="mt-6">
+                            <h1 className="text-4xl font-bold text-gray-800">
+                                Create an Account
+                            </h1>
+
+                            <p className="text-gray-500 mt-2">
+                                Start your AI interview preparation journey
+                            </p>
+                        </div>
+
+                        <form className="mt-6 flex flex-col gap-3" onSubmit={signUp}>
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="text"
+                                name="name"
+                                placeholder="Full Name"
+                                value={formValues.name}
+                                onChange={updateFormData}
+                            />
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="email"
+                                name="email"
+                                placeholder="Email"
+                                value={formValues.email}
+                                onChange={updateFormData}
+                            />
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="date"
+                                name="dob"
+                                value={formValues.dob}
+                                onChange={updateFormData}
+                            />
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="text"
+                                name="phone"
+                                placeholder="Phone Number"
+                                value={formValues.phone}
+                                onChange={updateFormData}
+                            />
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="password"
+                                name="password"
+                                placeholder="Password"
+                                value={formValues.password}
+                                onChange={updateFormData}
+                            />
+
+                            <input
+                                className="bg-gray-100 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[#2976DD]"
+                                type="password"
+                                name="confirmPassword"
+                                placeholder="Confirm Password"
+                                value={formValues.confirmPassword}
+                                onChange={updateFormData}
+                            />
+
+                            <button
+                                type="submit"
+                                className="bg-[#2976DD] hover:bg-blue-700 text-white py-4 rounded-xl font-semibold transition"
+                            >
+                                Create Account
+                            </button>
+                        </form>
+                    </div>
+
+                    {/* Right Section */}
+                    <div className="hidden lg:block relative">
+                        <img
+                            src="/signup.jpg"
+                            alt="AI Interview"
+                            className="w-full h-full object-cover"
+                        />
+
+                        <div className="absolute top-10 left-10 bg-[#2976DD] text-white px-6 py-4 rounded-2xl shadow-lg">
+                            <h3 className="font-semibold">
+                                AI Mock Interview
+                            </h3>
+
+                            <p className="text-sm opacity-90">
+                                Practice • Analyze • Improve
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </>
     )

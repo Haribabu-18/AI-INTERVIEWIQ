@@ -22,11 +22,11 @@ function Profile() {
     return age
   }
 
-  function editUserDetails() {
-    setFormData(userDetails);
-    setIsEditing(true);
+  // function editUserDetails() {
+  //   setFormData(userDetails);
+  //   setIsEditing(true);
 
-  }
+  // }
 
   return (
     <>
