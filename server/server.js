@@ -1,11 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import authRouter from './routes/auth.js'
 import userRouter from './routes/user.js'
 import interviewRouter from './routes/interview.js'
-import dotenv from 'dotenv';
-dotenv.config();
+
 
 const app = express();
 
