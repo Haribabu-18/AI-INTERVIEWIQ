@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { api } from '../apis/interceptors';
+import socket from '../interviewSocket';
 
 function Home() {
 
@@ -30,13 +31,30 @@ function Home() {
     }
   }
 
+  function firstQuestion(){
+    socket.emit("first-message", {message : "Tell me about yourself"})
+  }
+
+
+  useEffect(() => {
+    socket.connect();
+
+    // socket.on("start-interview", (data) => {
+    //   console.log(data, "data recieved from backend")
+    // })
+
+    socket.on("confirm-interview", (data) => {
+      console.log(data, "second message from server")
+    })
+  }, [])
+
   // useEffect(() => {
   //   aiContentContainer.current.innerText = aiResponse;
   // }, [])
   return (
     <>
 
-      <div>
+      {/* <div>
         <form className='flex justify-center mt-4 gap-4' onSubmit={callAI}>
           <textarea type="text" placeholder='ask ai' className='w-80 border-1 shadow-2xl' onChange={(e) => { setUserText(e.target.value) }} />
           <input type="submit" value="Submit" disabled={!userText.length ? true : false} className={`${!userText.length ? "bg-blue-300 rounded text-white p-3" : "bg-blue-700 cursor-pointer rounded text-white p-3"}`} />
@@ -45,7 +63,13 @@ function Home() {
 
       <div ref={aiContentContainer}>
 
-      </div>
+      </div> */}
+
+      <button onClick={firstQuestion}>First Message</button> 
+      <br />
+
+      {/* <button onClick={startInterview}>Start Interview</button>  */}
+
 
     </>
   )
