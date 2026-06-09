@@ -35,7 +35,7 @@ app.use("/user",userRouter)
 app.use("/interview", interviewRouter);
 
 //create a own server for socket.io
-const server = http.createServer();
+const server = http.createServer(app);
 
 //create a instance for socket io by providing server info
 const io = new Server(server, {

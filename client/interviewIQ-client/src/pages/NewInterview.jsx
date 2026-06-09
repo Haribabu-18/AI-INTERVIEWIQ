@@ -28,6 +28,7 @@ function NewInterview() {
       return
     }
 
+    //creating instance for using further
     const recognition = new SpeechRecognition();
     //until we stop manually it will listen what we speak
     recognition.continuous = true;
