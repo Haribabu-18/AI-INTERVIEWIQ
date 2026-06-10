@@ -1,4 +1,4 @@
-function textToSpeech(text) {
+function textToSpeech(text, setIsAiSpeaking) {
     const speechSynthesis = window.speechSynthesis;
 
     if (!speechSynthesis) {
@@ -10,6 +10,13 @@ function textToSpeech(text) {
 
     const utterence = new SpeechSynthesisUtterance(text)
     utterence.lang = "en-US"
+    utterence.onstart = () => {
+        setIsAiSpeaking(true);
+    }
+
+    utterence.onend = () => {
+        setIsAiSpeaking(false);
+    }
     // console.log(utterence,'utterence');
     speechSynthesis.speak(utterence);
 
@@ -38,7 +45,7 @@ function startListening(onTranscript) {
 
         let transcript = "";
 
-        for(let i = 0; i < data.results.length; i++){
+        for (let i = 0; i < data.results.length; i++) {
             transcript += data.results[i][0].transcript + " ";
         }
 
@@ -51,8 +58,8 @@ function startListening(onTranscript) {
 
 }
 
-function stopListening(){
-    if(recognition){
+function stopListening() {
+    if (recognition) {
         recognition.stop();
     }
 }
