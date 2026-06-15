@@ -7,6 +7,7 @@ function textToSpeech(text, setIsAiSpeaking) {
     }
 
     speechSynthesis.cancel();
+    setIsAiSpeaking?.(false);
 
     const utterence = new SpeechSynthesisUtterance(text)
     utterence.lang = "en-US"
@@ -17,6 +18,9 @@ function textToSpeech(text, setIsAiSpeaking) {
     utterence.onend = () => {
         setIsAiSpeaking(false);
     }
+
+    utterence.onerror = () => setIsAiSpeaking?.(false);
+    utterence.oncancel = () => setIsAiSpeaking?.(false);
     // console.log(utterence,'utterence');
     speechSynthesis.speak(utterence);
 
@@ -58,10 +62,17 @@ function startListening(onTranscript) {
 
 }
 
+function stopSpeaking(setIsAiSpeaking) {
+    if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+    }
+    setIsAiSpeaking?.(false);
+}
+
 function stopListening() {
     if (recognition) {
         recognition.stop();
     }
 }
 
-export { textToSpeech, startListening, stopListening }
+export { textToSpeech, startListening, stopListening, stopSpeaking }

@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { api } from '../apis/interceptors';
 import socket from '../interviewSocket';
-import { startListening, stopListening, textToSpeech } from '../utils/speech';
-import { data } from 'react-router-dom';
-import aiImage from '../assets/ai-dummy.jpeg'
-import { INTERVIEW_STAGES } from '../constants';
+import { startListening, stopListening, stopSpeaking, textToSpeech } from '../utils/speech';
+import { data } from 'react-router-dom';  
+import aiImage from '../assets/ai-dummy.jpeg'  
+import { INTERVIEW_STAGES } from '../constants';   
+import AiAvatar from '../components/AiAvatar';   
 
 function Home() {
 
@@ -19,6 +20,7 @@ function Home() {
   const [currentState, setCurrentState] = useState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET)
   const [buttonColor, setButtonColor] = useState("bg-blue-400")
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [interviewStarted, setInterviewStarted] = useState(false);
 
   async function callAI(e) {
     e.preventDefault();
@@ -26,8 +28,8 @@ function Home() {
     if (!userText.length) {
       return
     }
-
-
+    
+    
     try {
       const response = await api.post('/interview/liveInterview', { prompt: userText });
 
@@ -45,53 +47,80 @@ function Home() {
     socket.emit("first-message", { message: "Tell me about yourself" })
   }
 
-  function handleStartButton(){
+  function handleStartButton() {
+
+    stopSpeaking(setIsAiSpeaking);
+
+    if (!interviewStarted) {
+      socket.emit("start-interview", {
+        stack: "MERN",
+        experience: "Fresher"
+      });
+      setInterviewStarted(true)
+      return
+    }
 
     //onclick to start, enable mike and listen and chnage text to stop
-    if(currentState == INTERVIEW_STAGES.DID_NOT_ANSWER_YET){
+    if (currentState === INTERVIEW_STAGES.DID_NOT_ANSWER_YET) {
       startListening(setAnswer);
       setButtonText("Stop")
       setCurrentState(INTERVIEW_STAGES.ANSWERING)
       setButtonColor("bg-orange-400")
+      return
     }
 
     //onclick to stop, disable mike and change text to submit
-    if(currentState == INTERVIEW_STAGES.ANSWERING){
+    if (currentState === INTERVIEW_STAGES.ANSWERING) {
       stopListening();
       setButtonText("Submit")
       setCurrentState(INTERVIEW_STAGES.COMPLETED_ANSWER);
       setButtonColor("bg-green-400")
+      return
     }
 
     //onclick to submit, answer should sent to backend(socket) and get a new question and chnage button text to start
-    if(currentState == INTERVIEW_STAGES.COMPLETED_ANSWER){
+    if (currentState === INTERVIEW_STAGES.COMPLETED_ANSWER) {
+      socket.emit("submit-answer", {
+        answer
+      })
       setButtonText("Start");
       setAnswer("");
       setCurrentState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET);
       setButtonColor("bg-blue-400")
+      return
     }
 
-
-
-  }
+}
 
 
   useEffect(() => {
     socket.connect();
 
-    socket.on("confirm-interview", (data) => {
-      console.log(data, "second message from server")
-      if (data.message) {
-        textToSpeech(data.message, setIsAiSpeaking);
-      }
+    //Listening for AI questions
+
+    socket.on("ai-question", (data) => {
+      const aiQuestion = data.question;
+      setQuestion(aiQuestion);
+      textToSpeech(aiQuestion, setIsAiSpeaking);
     })
+
+    return () => {
+      socket.off("ai-question")
+    }
+
+    // socket.on("confirm-interview", (data) => {
+    //   console.log(data, "second message from server")
+    //   if (data.message) {
+    //     textToSpeech(data.message, setIsAiSpeaking);
+    //   }
+    // })
 
   }, [])
 
   // useEffect(() => {
-  //   aiContentContainer.current.innerText = aiResponse;
+  //   aiContentContainer.current.innerText = aiResponse;   
   // }, [])
-  return (
+  return (       
     <>
 
       {/* <div>
@@ -122,14 +151,19 @@ function Home() {
       {/* <br /> */}
 
       <div className='h-screen flex justify-center'>
-        <div className='absolute top-20.5'>
-          <img src={aiImage} alt="could not find" className={`h-60 rounded-3xl ${isAiSpeaking ? "opacity-100" : "opacity-50"}`} />
+        <div className='absolute top-20.5'>     
+          <AiAvatar speaking={isAiSpeaking} />   
+          {/* <img src={aiImage} alt="could not find" className={`h-60 rounded-3xl ${isAiSpeaking ? "opacity-100" : "opacity-50"}`} /> */}
           <h3 className='font-bold text-xl'>{question}</h3>
         </div>
 
         <div className='absolute top-100.5 flex gap-1'>
-          <textarea className='border shadow-2xl w-100' onChange={(e) => { e.target.value }} value={answer}></textarea>
-          <button className={`text-white ${buttonColor} mt-1 p-2 rounded cursor-pointer`} onClick={handleStartButton}>{buttonText}</button>
+          <textarea
+            className='border shadow-2xl w-100'    
+            value={answer}    
+            onChange={(e) => setAnswer(e.target.value)}      
+          />
+          <button className={`text-white ${buttonColor} mt-1 p-2 rounded cursor-pointer`} onClick={handleStartButton}>{buttonText}</button>  
 
         </div>
 

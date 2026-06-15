@@ -28,12 +28,12 @@ export async function liveInterview(req, res) {
         //     input: body.prompt,
         // });
 
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: body.prompt,
-        });
+        // const response = await ai.models.generateContent({
+        //     model: 'gemini-2.5-flash',
+        //     contents: body.prompt,
+        // });
 
-        console.log(response.text);
+        // console.log(response.text);
 
         res.status(200).json({ message: "ok", data: response.text })
 
@@ -42,3 +42,26 @@ export async function liveInterview(req, res) {
 
     }
 }
+
+async function askAI({message}) {
+    const prompt = message.map((item) => {
+        return `${item.role} : ${item.content}`
+    })
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+
+        console.log(response.text);
+        return response.text;
+
+    } catch (err) {
+        return Promise.reject(err);
+
+    }
+
+}
+
+export { askAI }
