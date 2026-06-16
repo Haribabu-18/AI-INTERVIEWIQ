@@ -1,26 +1,32 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useContext } from 'react'
 import { api } from '../apis/interceptors';
 import socket from '../interviewSocket';
 import { startListening, stopListening, stopSpeaking, textToSpeech } from '../utils/speech';
-import { data } from 'react-router-dom';  
-import aiImage from '../assets/ai-dummy.jpeg'  
-import { INTERVIEW_STAGES } from '../constants';   
-import AiAvatar from '../components/AiAvatar';   
+import { data } from 'react-router-dom';
+import aiImage from '../assets/ai-dummy.jpeg'
+import { INTERVIEW_STAGES } from '../constants';
+import AiAvatar from '../components/AiAvatar';
+import { UserProvider } from '../components/ContextProvider';
 
 function Home() {
 
   const aiContentContainer = useRef();
 
-  const aiResponse = "useEffect` is a **Hook** in React that allows you to perform **side effects** in functional components. It essentially provides a way to interact with the outside world (like the browser DOM, APIs, external subscriptions, timers, etc.) after a component has rendered.\n\nBefore Hooks, side effects in class components were handled using lifecycle methods like `componentDidMount`, `componentDidUpdate`, and `componentWillUnmount`. `useEffect` consolidates these concerns into a single API.\n\n---\n\n### What are \"Side Effects\"?\n\nIn the context of React, rendering a component should be a \"pure\" operation – meaning it only calculates what to display based on its props and state, without altering anything outside its scope. Side effects are anything that reaches outside the component to do something, such as:\n\n*   **Data fetching:** Making API calls to get data.\n*   **DOM manipulation:** Directly changing the browser's DOM (e.g., setting the document title, adding/removing event listeners).\n*   **Subscriptions:** Setting up real-time connections or listeners.\n*   **Timers:** `setTimeout` or `setInterval`.\n*   **Logging:** Sometimes, logging to the console is a side effect.\n\n---\n\n### Basic Anatomy of `useEffect`\n\nThe `useEffect` Hook accepts two arguments:\n\n1.  **A function (the \"effect\" function):** This is where you put your side effect code.\n2.  **An optional array of dependencies:** This array tells React when to re-run your effect.\n\n```javascript\nimport React, { useState, useEffect } from 'react';\n\nfunction MyComponent() {\n  const [count, setCount] = useState(0);\n\n  // The basic structure\n  useEffect(() => {\n    // This function runs AFTER EVERY render of MyComponent\n    // if no dependency array is provided.\n\n    console.log('Component rendered or count changed!');\n    document.title = `Count: ${count}`;\n\n    // Optional: Return a cleanup function\n    return () => {\n      // This function runs BEFORE the component unmounts\n      // OR before the effect runs again (if dependencies change).\n      console.log('Cleanup for previous effect or unmount');\n      // For example, remove event listeners, clear timers, unsubscribe\n    };\n  }, [count]); // Optional: Dependency array\n\n  return (\n    <div>\n      <p>You clicked {count} times</p>\n      <button onClick={() => setCount(count + 1)}>\n        Click me\n      </button>\n    </div>\n  );\n}\n```\n\n---\n\n### Understanding the Dependency Array (The Key Part!)\n\nThe dependency array (the second argument to `useEffect`) is crucial for controlling *when* your effect runs.\n\n1.  **No dependency array (runs after every render):**\n    ```javascript\n    useEffect(() => {\n      // Runs after every single render of the component.\n      // Be careful: this can lead to performance issues if not handled well.\n    });\n    ```\n    *Use case:* Very rare for actual side effects; perhaps for logging every render.\n\n2.  **Empty dependency array `[]` (runs once on mount, cleans up on unmount):**\n    ```javascript\n    useEffect(() => {\n      console.log('Component mounted!');\n      // This effect runs only once after the initial render.\n      // It behaves like componentDidMount.\n\n      return () => {\n        console.log('Component unmounted!');\n        // This cleanup runs only once when the component unmounts.\n        // It behaves like componentWillUnmount.\n      };\n    }, []);\n    ```\n    *Use cases:* Data fetching that doesn't depend on props/state, setting up global event listeners, initializing third-party libraries.\n\n3.  **Dependencies specified `[prop1, state2]` (runs when dependencies change):**\n    ```javascript\n    useEffect(() => {\n      console.log(`Count or name changed: Count is ${count}, Name is ${name}`);\n      // This effect runs after the initial render,\n      // AND whenever `count` or `name` changes between renders.\n\n      return () => {\n        console.log('Cleanup before count or name changes again, or on unmount.');\n        // This cleanup runs BEFORE the effect is re-executed\n        // (if count or name changed) or when the component unmounts.\n      };\n    }, [count, name]); // Effect re-runs if count or name changes\n    ```\n    *Use cases:* Fetching data based on an ID prop, updating the DOM based on a state variable, reacting to specific state or prop changes.\n\n---\n\n### The Cleanup Function\n\nThe function you *return* from `useEffect` is the **cleanup function**. It's vital for preventing memory leaks and unwanted behavior.\n\n*   **When does it run?**\n    *   Before the effect runs again (if the dependencies have changed).\n    *   When the component unmounts.\n\n*   **What should it do?**\n    *   Remove event listeners (`removeEventListener`).\n    *   Clear timers (`clearTimeout`, `clearInterval`).\n    *   Unsubscribe from external services.\n    *   Cancel pending network requests.\n\nWithout proper cleanup, you can end up with stale data, performance issues, or incorrect component behavior.\n\n---\n\n### Key Takeaways\n\n*   **Purpose:** To manage side effects (interactions with the \"outside world\") in functional components.\n*   **Replacement for:** `componentDidMount`, `componentDidUpdate`, `componentWillUnmount` from class components.\n*   **Dependency Array:** Controls *when* the effect re-runs. This is the most important concept to master.\n*   **Cleanup Function:** Crucial for preventing memory leaks and resource management; always return a cleanup function if your effect sets up subscriptions, listeners, or timers.\n*   **Runs *After* Render:** Effects execute after the component has rendered and the browser has painted the screen.\n\n`useEffect` is one of the most powerful and frequently used Hooks in React, essential for building complex and interactive applications"
+  const { userDetails } = useContext(UserProvider);
 
   const [userText, setUserText] = useState("");
   const [answer, setAnswer] = useState("");
   const [question, setQuestion] = useState("First question");
-  const [buttonText, setButtonText] = useState("Start")
+  const [buttonText, setButtonText] = useState("Start Interview")
   const [currentState, setCurrentState] = useState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET)
   const [buttonColor, setButtonColor] = useState("bg-blue-400")
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [interviewStarted, setInterviewStarted] = useState(false);
+  const [interviewResult, setInterviewResult] = useState(null);
+
+  //for questions part in rightside
+  const [allQuestions, setAllQuestions] = useState([]);
+  const [completedQuestions, setCompletedQuestions] = useState([]);
 
   async function callAI(e) {
     e.preventDefault();
@@ -28,8 +34,8 @@ function Home() {
     if (!userText.length) {
       return
     }
-    
-    
+
+
     try {
       const response = await api.post('/interview/liveInterview', { prompt: userText });
 
@@ -57,13 +63,14 @@ function Home() {
         experience: "Fresher"
       });
       setInterviewStarted(true)
+      setButtonText("Start Answering");
       return
     }
 
     //onclick to start, enable mike and listen and chnage text to stop
     if (currentState === INTERVIEW_STAGES.DID_NOT_ANSWER_YET) {
       startListening(setAnswer);
-      setButtonText("Stop")
+      setButtonText("Stop Recording")
       setCurrentState(INTERVIEW_STAGES.ANSWERING)
       setButtonColor("bg-orange-400")
       return
@@ -72,7 +79,7 @@ function Home() {
     //onclick to stop, disable mike and change text to submit
     if (currentState === INTERVIEW_STAGES.ANSWERING) {
       stopListening();
-      setButtonText("Submit")
+      setButtonText("Submit Answer")
       setCurrentState(INTERVIEW_STAGES.COMPLETED_ANSWER);
       setButtonColor("bg-green-400")
       return
@@ -80,17 +87,30 @@ function Home() {
 
     //onclick to submit, answer should sent to backend(socket) and get a new question and chnage button text to start
     if (currentState === INTERVIEW_STAGES.COMPLETED_ANSWER) {
+
+      //for questions on right side
+
+      setCompletedQuestions(prev => [
+        ...prev,
+        question
+      ]);
+
       socket.emit("submit-answer", {
         answer
       })
-      setButtonText("Start");
+      setButtonText("Start Answering");
       setAnswer("");
       setCurrentState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET);
       setButtonColor("bg-blue-400")
       return
     }
 
-}
+  }
+
+  function handleCompleteInterview() {
+    stopListening();
+    socket.emit("end-interview")
+  }
 
 
   useEffect(() => {
@@ -101,11 +121,27 @@ function Home() {
     socket.on("ai-question", (data) => {
       const aiQuestion = data.question;
       setQuestion(aiQuestion);
+
+      //for questions on rightside
+      setAllQuestions(prev => {
+        if (prev.includes(aiQuestion)) return prev;
+        return [...prev, aiQuestion];
+      });
+
       textToSpeech(aiQuestion, setIsAiSpeaking);
     })
 
+    socket.on("interview-result", (data) => {
+
+      console.log("Interview Saved");
+
+      setInterviewResult(data);
+    });
+
     return () => {
       socket.off("ai-question")
+      socket.off("interview-result");
+      socket.disconnect();
     }
 
     // socket.on("confirm-interview", (data) => {
@@ -120,7 +156,7 @@ function Home() {
   // useEffect(() => {
   //   aiContentContainer.current.innerText = aiResponse;   
   // }, [])
-  return (       
+  return (
     <>
 
       {/* <div>
@@ -150,24 +186,142 @@ function Home() {
 
       {/* <br /> */}
 
-      <div className='h-screen flex justify-center'>
-        <div className='absolute top-20.5'>     
-          <AiAvatar speaking={isAiSpeaking} />   
+      {/* <div className='h-screen flex justify-center'> */}
+      {/* <div className='absolute top-20.5'>
+          <AiAvatar speaking={isAiSpeaking} />
           {/* <img src={aiImage} alt="could not find" className={`h-60 rounded-3xl ${isAiSpeaking ? "opacity-100" : "opacity-50"}`} /> */}
-          <h3 className='font-bold text-xl'>{question}</h3>
-        </div>
+      {/* <h3 className='font-bold text-xl'>{question}</h3> */}
+      {/* </div> */}
 
-        <div className='absolute top-100.5 flex gap-1'>
+      {/* <div className='absolute top-100.5 flex gap-1'>
           <textarea
-            className='border shadow-2xl w-100'    
-            value={answer}    
-            onChange={(e) => setAnswer(e.target.value)}      
+            className='border shadow-2xl w-100'
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
           />
-          <button className={`text-white ${buttonColor} mt-1 p-2 rounded cursor-pointer`} onClick={handleStartButton}>{buttonText}</button>  
+          <button className={`text-white ${buttonColor} mt-1 p-2 rounded cursor-pointer`} onClick={handleStartButton}>{buttonText}</button>
+
+        </div> */}
+
+      {/* <div className='absolute top-120 flex gap-3'>
+
+          <button
+            className='bg-red-500 text-white p-2 rounded'
+            onClick={handleCompleteInterview}
+          >
+            Complete Interview
+          </button>
+
+        </div> */}
+
+      {/* </div> */}
+
+      {/* clean code */}
+      <div className="min-h-screen bg-slate-100 p-8">
+        <div className="max-w-7xl mx-auto">
+
+          <div className="grid grid-cols-3 gap-8">
+
+            {/* LEFT SIDE */}
+            <div className="col-span-2">
+
+              <div className="bg-white rounded-3xl shadow-xl p-8">
+
+                <div className="flex justify-center">
+                  <AiAvatar speaking={isAiSpeaking} />
+                </div>
+
+                <div className="mt-6 text-center">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {question}
+                  </h2>
+                </div>
+
+                <div className="mt-8">
+                  <textarea
+                    value={answer}
+                    onChange={(e) => setAnswer(e.target.value)}
+                    className="w-full border rounded-xl p-4 h-36 resize-none"
+                    placeholder="Speak or type your answer..."
+                  />
+                </div>
+
+                <div className="mt-6 flex justify-center gap-4">
+
+                  <button
+                    onClick={handleStartButton}
+                    className={`${buttonColor} text-white px-5 py-2 rounded-lg font-medium min-w-[140px]`}
+                  >
+                    {buttonText}
+                  </button>
+
+                  <button
+                    className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-medium min-w-[140px]"
+                    onClick={handleCompleteInterview}
+                  >
+                    Complete Interview
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* RIGHT SIDE */}
+
+            <div>
+
+              <div className="bg-white rounded-3xl shadow-xl p-5">
+
+                <h3 className="font-bold text-xl mb-5">
+                  Interview Progress
+                </h3>
+
+                {allQuestions.length === 0 ? (
+                  <p>No questions yet</p>
+                ) : (
+                  allQuestions.map((q, index) => (
+                    <div
+                      key={index}
+                      className={`mb-3 p-4 rounded-xl border flex justify-between items-center
+                ${completedQuestions.includes(q)
+                          ? "bg-green-50 border-green-300"
+                          : q === question
+                            ? "bg-yellow-50 border-yellow-300"
+                            : "bg-gray-50"
+                        }`}
+                    >
+                      <span className="text-sm">
+                        {q}
+                      </span>
+
+                      {completedQuestions.includes(q) ? (
+                        <span className="text-green-600 font-bold">
+                          ✓
+                        </span>
+                      ) : q === question ? (
+                        <span className="text-yellow-600 font-semibold">
+                          Current
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">
+                          Pending
+                        </span>
+                      )}
+                    </div>
+                  ))
+                )}
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
-
       </div>
+
     </>
   )
 }

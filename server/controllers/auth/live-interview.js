@@ -46,7 +46,7 @@ export async function liveInterview(req, res) {
 async function askAI({message}) {
     const prompt = message.map((item) => {
         return `${item.role} : ${item.content}`
-    })
+    }).join("\n")
 
     try {
         const response = await ai.models.generateContent({
@@ -64,4 +64,34 @@ async function askAI({message}) {
 
 }
 
-export { askAI }
+async function getFeedbackFromAI({ message }) {
+    console.log(message)
+
+    const prompt = message.map((item) => {
+
+        // console.log(message,prompt)
+        return `${item.role} : ${item.content}`
+    }).join("\n")
+
+
+
+    try {
+
+        // GEMINI AI
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json"
+            }
+
+        });
+
+        return response.text
+
+    } catch (err) {
+        return Promise.reject(err)
+    }
+}
+
+export { askAI, getFeedbackFromAI }

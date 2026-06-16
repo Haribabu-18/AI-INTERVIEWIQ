@@ -1,9 +1,12 @@
-import { askAI } from "../controllers/auth/live-interview.js";
+import { askAI, getFeedbackFromAI } from "../controllers/auth/live-interview.js";
 import { Interview } from "../models/interview.js";
+import { endInterviewSystemPrompt, startInterviewSystemPrompt } from "../utils/prompts.js";
 
 const interviewSessions = new Map();
 
 function interviewSocket(socket) {
+    const userId = socket.userId
+    console.log(userId, "userid ")
     // socket.on("first-message", (data) => {
     //     console.log("first message recieved", data);
 
@@ -13,33 +16,21 @@ function interviewSocket(socket) {
     socket.on("start-interview",
         async ({
             stack = "MERN",
-            experience = "Fresher"
+            difficultyLevel = "Fresher"
         }) => {
 
+            console.log("User ID received:", userId);
             try {
 
                 const session = {
-                    // userId,
+                    userId,
                     stack,
-                    experience,
+                    difficultyLevel,
                     startedAt: new Date(),
                     conversation: [
                         {
                             role: "system",
-                            content: `
-                            You are a Junoir Technical Interviewer.
-                            Candidate Stack:
-                            ${stack}
-                            Experience:
-                            ${experience}
-
-                            Rules:
-
-                            1. Ask only one question based on useEffect.
-                            2. Ask follow-up questions.
-                            3. Challenge weak answers, or ask follow up question if answer is not 100% correct
-                            4. Increase difficulty gradually.
-                            5. Never provide solutions.`
+                            content: startInterviewSystemPrompt(stack, difficultyLevel)
                         }
                     ]
                 }
@@ -120,6 +111,7 @@ function interviewSocket(socket) {
         if (!session) {
             return;
         }
+        // console.log("Saving interview for:", session.userId);
 
         // {technicalScore : 8, communicationScore : 2, strongAreas : ["react","react-router","react-practical"], weakAreas : ["DSA","JS fundamentals","Constructor function"], roadMap : "Should practice more on DSA part for week 1 ...."}
 
@@ -127,57 +119,25 @@ function interviewSocket(socket) {
         // Before ending the interview get a feedback, get total score out of 10, get score for communication out of 5 and return an array for strong areas and weak areas also generate a week road map
         const lastConversation = {
             role: "system",
-            content: ` 
-            You are a senior technical interviewer. 
-            Evaluate the FULL interview transcript provided by the user.
-
-            Return ONLY valid JSON — no markdown, no explanation.
-
-            Scoring rules:
-            - technicalScore: integer 0-10. Base on correctness, depth, React practical, DSA, JS fundamentals.
-            - communicationScore: integer 0-5. Base on clarity, structure, English fluency, confidence.
-            - strongAreas: array of  strings (skills where candidate was solid)
-            - weakAreas: array of strings (skills to improve)
-            - roadMap: object with 7 days for week 1, each day is a specific task
-
-            JSON schema to follow exactly:
-            {
-            "technicalScore": 8,
-            "communicationScore": 2,
-            "strongAreas": ["react", "react-router", "react-practical"],
-            "weakAreas": ["DSA", "JS fundamentals", "Constructor function"],
-            "feedback" : "You were good with explination part, theory part but should practice more on practical part in question 1 you strugged to create crud operation",
-            "roadMap": {
-                "day1": "DSA basics - arrays and time complexity",
-                "day2": "JS fundamentals - closures and hoisting",
-                "day3": "Constructor functions vs classes",
-                "day4": "Practice 5 LeetCode easy array problems",
-                "day5": "React practical - build small router app",
-                "day6": "Mock interview - explain code out loud",
-                "day7": "Review weak areas and retake quiz"
-            }
-            }
-
-            return me result in json format 
-`
+            content: endInterviewSystemPrompt()
         }
 
         //add last conversation to whole conversation
         session.conversation.push(lastConversation);
 
         //call ai to get feedback in JSON format from the given conversation
-        const feedback = await askAI({ message: session.conversation });
+        const feedback = await getFeedbackFromAI({ message: session.conversation });
 
-       const savedInterview =  await addInterview({
+        console.log("AI Feedback:", feedback);
+
+        const savedInterview = await addInterview({
             aiResponse: feedback,
-            userId: socket.userId,
+            userId: session.userId,
             stack: session.stack,
-            difficultyLevel: session.experience,
+            difficultyLevel: session.difficultyLevel,
             conversation: session.conversation,
             startedAt: session.startedAt
         })
-
-        console.log(session?.conversation)
 
         socket.emit("interview-result", savedInterview);
 

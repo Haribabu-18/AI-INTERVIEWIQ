@@ -10,6 +10,7 @@ import interviewRouter from './routes/interview.js'
 import http from 'http';
 import { Server } from 'socket.io';
 import interviewSocket from './sockets/interviewSocket.js';
+import jwt from 'jsonwebtoken';
 
 
 const app = express();
@@ -42,9 +43,29 @@ const io = new Server(server, {
     cors : "*"
 });
 
+io.use((socket, next)=>{
+
+    const token = socket.handshake.auth.token;
+    
+    if(!token){
+        socket.emit("auth", {message: "Token not provided"});
+        // socket.off();
+    }
+
+    try{
+
+        const userData = jwt.verify(token, process.env.TOKEN_SECRET_KEY)
+        socket.userId = userData.id
+        next()
+    }catch(err){
+        console.log(err.message);
+        // socket.off();
+    }
+})
+
 //once connection is established execute callback
 io.on("connection", (socket) => {
-    console.log(socket.id, "socket id");
+    console.log(socket.userId, "userid from socket")
 
     interviewSocket(socket);
 

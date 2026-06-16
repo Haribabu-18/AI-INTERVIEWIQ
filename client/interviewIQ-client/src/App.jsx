@@ -13,6 +13,7 @@ import Profile from "./components/Profile";
 
 import NewInterview from "./pages/NewInterview";
 import InterviewHistory from "./pages/InterviewHistory";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
 
             <Route element={<AuthProtectedRoute />}>
               <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard/>}/>
               <Route path="/profile" element={<Profile />} />
               <Route path="/new-interview" element={<NewInterview />} />
               <Route path="/history" element={<InterviewHistory />} />
