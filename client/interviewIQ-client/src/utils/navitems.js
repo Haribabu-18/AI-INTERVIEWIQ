@@ -1,11 +1,15 @@
 export const navItems = [
     {
-        name: "Dashboard",
+        name: "Home",
         path: '/'
     },
     {
         name: "New Interview",
         path: '/new-interview'
+    },
+    {
+        name: "Dashboard",
+        path: '/dashboard'
     },
     {
         name: "History",

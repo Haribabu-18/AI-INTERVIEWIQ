@@ -1,34 +1,29 @@
-// import React from 'react'
-// import TechnicalScoreChart from '../components/TechnicalScoreChart'
-// import SkillsChart from '../components/SkillsChart'
-// import InterviewHistoryTable from '../components/InterviewHistoryTable'
-
-// function Dashboard() {
-//   return (
-//     <div className='h-screen flex flex-col justify-between gap-1'>
-//         {/* charts */}
-//         <div className='flex border-2 h-full'>
-//             <TechnicalScoreChart/>
-//             <SkillsChart/>
-
-//         </div>
-
-//         {/* table */}
-//         <div className='border-2 h-full'>
-//             <InterviewHistoryTable/>
-//         </div>
-//     </div>
-//   )
-// }
-
-// export default Dashboard
-
-// pages/Dashboard.tsx
+import React, { useEffect, useState } from "react";
 import TechnicalScoreChart from "../components/TechnicalScoreChart";
 import SkillsChart from "../components/SkillsChart";
 import InterviewHistoryTable from "../components/InterviewHistoryTable";
+import axios from "axios";
+import InterviewHistory from "./InterviewHistory";
 
 export default function Dashboard() {
+  const [interviews, setInterviews] = useState([]);
+
+  useEffect(() => {
+    fetchInterviewData();
+  }, [])
+
+  const fetchInterviewData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const response = await axios.post("http://localhost:4000/interview/getInterview", { token })
+      console.log(response.data.interviewData, "response in interview details")
+      setInterviews(response.data.interviewData);
+
+    } catch (err) {
+      console.log(err.message)
+    }
+  }
   return (
     <div className="min-h-screen bg-slate-100 p-4 sm:p-6">
       <header className="mb-4 sm:mb-6">
@@ -39,17 +34,24 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* line chart takes 2/3 on desktop */}
         <div className="h-[360px] lg:col-span-2">
-          <TechnicalScoreChart />
+          <TechnicalScoreChart Interview={interviews} />
         </div>
         <div className="h-[360px]">
-          <SkillsChart />
+          <SkillsChart Interview={interviews} />
         </div>
 
         {/* table full width */}
         <div className="h-[420px] lg:col-span-3">
-          <InterviewHistoryTable />
+          <InterviewHistoryTable Interview={interviews} />
         </div>
       </div>
+      {/* 👇 Interview history cards section */}
+      {/* <section className="mt-6">
+        <h2 className="text-lg font-semibold text-slate-700 mb-4">
+          Interview History
+        </h2>
+        <InterviewHistory Interview={interviews} />
+      </section> */}
     </div>
   );
 }

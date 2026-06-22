@@ -1,329 +1,166 @@
-import React, { useEffect, useRef, useState, useContext } from 'react'
-import { api } from '../apis/interceptors';
-import socket from '../interviewSocket';
-import { startListening, stopListening, stopSpeaking, textToSpeech } from '../utils/speech';
-import { data } from 'react-router-dom';
-import aiImage from '../assets/ai-dummy.jpeg'
-import { INTERVIEW_STAGES } from '../constants';
-import AiAvatar from '../components/AiAvatar';
-import { UserProvider } from '../components/ContextProvider';
+import React from "react";
+import logoIQ from "../assets/logoIQ.png";
+import heroRobot from "../assets/hero-robot.jpg";
 
-function Home() {
+const FEATURES = [
+  { icon: "⚡", label: "React · Node · Python · Java · DSA" },
+  { icon: "🎯", label: "Fresher → Senior Levels" },
+  { icon: "🤖", label: "Real-Time AI Feedback" },
+  { icon: "📊", label: "Performance Analytics" },
+];
 
-  const aiContentContainer = useRef();
-
-  const { userDetails } = useContext(UserProvider);
-
-  const [userText, setUserText] = useState("");
-  const [answer, setAnswer] = useState("");
-  const [question, setQuestion] = useState("First question");
-  const [buttonText, setButtonText] = useState("Start Interview")
-  const [currentState, setCurrentState] = useState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET)
-  const [buttonColor, setButtonColor] = useState("bg-blue-400")
-  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
-  const [interviewStarted, setInterviewStarted] = useState(false);
-  const [interviewResult, setInterviewResult] = useState(null);
-
-  //for questions part in rightside
-  const [allQuestions, setAllQuestions] = useState([]);
-  const [completedQuestions, setCompletedQuestions] = useState([]);
-
-  async function callAI(e) {
-    e.preventDefault();
-
-    if (!userText.length) {
-      return
-    }
-
-
-    try {
-      const response = await api.post('/interview/liveInterview', { prompt: userText });
-
-      console.log(response, response?.data?.data, 'ai response')
-
-      aiContentContainer.current.innerText = response.data.data
-
-    } catch (err) {
-      console.log(err)
-
-    }
-  }
-
-  function firstQuestion() {
-    socket.emit("first-message", { message: "Tell me about yourself" })
-  }
-
-  function handleStartButton() {
-
-    stopSpeaking(setIsAiSpeaking);
-
-    if (!interviewStarted) {
-      socket.emit("start-interview", {
-        stack: "MERN",
-        experience: "Fresher"
-      });
-      setInterviewStarted(true)
-      setButtonText("Start Answering");
-      return
-    }
-
-    //onclick to start, enable mike and listen and chnage text to stop
-    if (currentState === INTERVIEW_STAGES.DID_NOT_ANSWER_YET) {
-      startListening(setAnswer);
-      setButtonText("Stop Recording")
-      setCurrentState(INTERVIEW_STAGES.ANSWERING)
-      setButtonColor("bg-orange-400")
-      return
-    }
-
-    //onclick to stop, disable mike and change text to submit
-    if (currentState === INTERVIEW_STAGES.ANSWERING) {
-      stopListening();
-      setButtonText("Submit Answer")
-      setCurrentState(INTERVIEW_STAGES.COMPLETED_ANSWER);
-      setButtonColor("bg-green-400")
-      return
-    }
-
-    //onclick to submit, answer should sent to backend(socket) and get a new question and chnage button text to start
-    if (currentState === INTERVIEW_STAGES.COMPLETED_ANSWER) {
-
-      //for questions on right side
-
-      setCompletedQuestions(prev => [
-        ...prev,
-        question
-      ]);
-
-      socket.emit("submit-answer", {
-        answer
-      })
-      setButtonText("Start Answering");
-      setAnswer("");
-      setCurrentState(INTERVIEW_STAGES.DID_NOT_ANSWER_YET);
-      setButtonColor("bg-blue-400")
-      return
-    }
-
-  }
-
-  function handleCompleteInterview() {
-    stopListening();
-    socket.emit("end-interview")
-  }
-
-
-  useEffect(() => {
-    socket.connect();
-
-    //Listening for AI questions
-
-    socket.on("ai-question", (data) => {
-      const aiQuestion = data.question;
-      setQuestion(aiQuestion);
-
-      //for questions on rightside
-      setAllQuestions(prev => {
-        if (prev.includes(aiQuestion)) return prev;
-        return [...prev, aiQuestion];
-      });
-
-      textToSpeech(aiQuestion, setIsAiSpeaking);
-    })
-
-    socket.on("interview-result", (data) => {
-
-      console.log("Interview Saved");
-
-      setInterviewResult(data);
-    });
-
-    return () => {
-      socket.off("ai-question")
-      socket.off("interview-result");
-      socket.disconnect();
-    }
-
-    // socket.on("confirm-interview", (data) => {
-    //   console.log(data, "second message from server")
-    //   if (data.message) {
-    //     textToSpeech(data.message, setIsAiSpeaking);
-    //   }
-    // })
-
-  }, [])
-
-  // useEffect(() => {
-  //   aiContentContainer.current.innerText = aiResponse;   
-  // }, [])
+function FeaturePill({ icon, label }) {
   return (
-    <>
+    <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/70 px-4 py-2 text-sm text-slate-600 shadow-sm backdrop-blur-md">
+      <span aria-hidden>{icon}</span>
+      {label}
+    </span>
+  );
+}
 
-      {/* <div>
-        <form className='flex justify-center mt-4 gap-4' onSubmit={callAI}>
-          <textarea type="text" placeholder='ask ai' className='w-80 border-1 shadow-2xl' onChange={(e) => { setUserText(e.target.value) }} />
-          <input type="submit" value="Submit" disabled={!userText.length ? true : false} className={`${!userText.length ? "bg-blue-300 rounded text-white p-3" : "bg-blue-700 cursor-pointer rounded text-white p-3"}`} />
-        </form>
+export default function Home() {
+  return (
+    <main className="relative min-h-screen overflow-hidden bg-white">
+      {/* Ambient background glows — purely decorative */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-blue-50/80 blur-3xl" />
+        <div className="absolute top-1/4 -right-32 h-[380px] w-[380px] rounded-full bg-indigo-50/70 blur-3xl" />
       </div>
 
-      <div ref={aiContentContainer}>
+      {/* Centered content column — replaces the old min-h/h-full combo that
+          had nothing real to center against */}
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col justify-center px-6 py-20 lg:px-16">
+        <div className="grid items-center gap-x-12 gap-y-20 lg:grid-cols-2">
 
-      </div> */}
-
-      {/* <button onClick={firstQuestion}>First Message</button> 
-      <br />
-
-      {/* <button onClick={startInterview}>Start Interview</button>  */}
-      {/* <button onClick={() => {textToSpeech("hey lets start interview")}}>Listen</button>
-
-      <br />
-
-      <button onClick={() => {startListening(setAnswer)}}>Speak</button>
-
-      <br />
-
-      <button onClick={stopListening}>Stop</button> */}
-
-      {/* <br /> */}
-
-      {/* <div className='h-screen flex justify-center'> */}
-      {/* <div className='absolute top-20.5'>
-          <AiAvatar speaking={isAiSpeaking} />
-          {/* <img src={aiImage} alt="could not find" className={`h-60 rounded-3xl ${isAiSpeaking ? "opacity-100" : "opacity-50"}`} /> */}
-      {/* <h3 className='font-bold text-xl'>{question}</h3> */}
-      {/* </div> */}
-
-      {/* <div className='absolute top-100.5 flex gap-1'>
-          <textarea
-            className='border shadow-2xl w-100'
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-          />
-          <button className={`text-white ${buttonColor} mt-1 p-2 rounded cursor-pointer`} onClick={handleStartButton}>{buttonText}</button>
-
-        </div> */}
-
-      {/* <div className='absolute top-120 flex gap-3'>
-
-          <button
-            className='bg-red-500 text-white p-2 rounded'
-            onClick={handleCompleteInterview}
-          >
-            Complete Interview
-          </button>
-
-        </div> */}
-
-      {/* </div> */}
-
-      {/* clean code */}
-      <div className="min-h-screen bg-slate-100 p-8">
-        <div className="max-w-7xl mx-auto">
-
-          <div className="grid grid-cols-3 gap-8">
-
-            {/* LEFT SIDE */}
-            <div className="col-span-2">
-
-              <div className="bg-white rounded-3xl shadow-xl p-8">
-
-                <div className="flex justify-center">
-                  <AiAvatar speaking={isAiSpeaking} />
-                </div>
-
-                <div className="mt-6 text-center">
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    {question}
-                  </h2>
-                </div>
-
-                <div className="mt-8">
-                  <textarea
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    className="w-full border rounded-xl p-4 h-36 resize-none"
-                    placeholder="Speak or type your answer..."
-                  />
-                </div>
-
-                <div className="mt-6 flex justify-center gap-4">
-
-                  <button
-                    onClick={handleStartButton}
-                    className={`${buttonColor} text-white px-5 py-2 rounded-lg font-medium min-w-[140px]`}
-                  >
-                    {buttonText}
-                  </button>
-
-                  <button
-                    className="bg-red-500 hover:bg-red-600 text-white px-5 py-2 rounded-lg font-medium min-w-[140px]"
-                    onClick={handleCompleteInterview}
-                  >
-                    Complete Interview
-                  </button>
-
-                </div>
-
-              </div>
-
+          {/* LEFT SIDE */}
+          <div className="hero-fade-up flex flex-col items-start text-left">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/70 px-4 py-2 text-xs font-medium text-gray-600 shadow-sm backdrop-blur-md">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#2976DD]" />
+              Built for students chasing their first offer
             </div>
 
-            {/* RIGHT SIDE */}
+            <h1 className="text-4xl font-bold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
+              <span className="bg-gradient-to-br from-slate-800 via-[#2976DD] to-[#4A8BE8] bg-clip-text text-transparent">
+                Nail Every
+              </span>
+              <br />
+              <span className="text-slate-900">Interview.</span>
+              <br />
+              <span className="text-slate-700">Land Every Offer.</span>
+            </h1>
 
-            <div>
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-slate-600">
+              Practice mock interviews across any stack and experience level.
+              Get instant AI-powered feedback, improve communication,
+              technical knowledge and confidence before your real interview.
+            </p>
 
-              <div className="bg-white rounded-3xl shadow-xl p-5">
+            <div className="mt-10 flex flex-wrap items-center gap-4">
+              <a
+                href="/new-interview"
+                className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#2976DD] to-[#4A8BE8] px-8 py-4 font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/35"
+              >
+                Start Interview
+                <span className="transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </a>
 
-                <h3 className="font-bold text-xl mb-5">
-                  Interview Progress
-                </h3>
-
-                {allQuestions.length === 0 ? (
-                  <p>No questions yet</p>
-                ) : (
-                  allQuestions.map((q, index) => (
-                    <div
-                      key={index}
-                      className={`mb-3 p-4 rounded-xl border flex justify-between items-center
-                ${completedQuestions.includes(q)
-                          ? "bg-green-50 border-green-300"
-                          : q === question
-                            ? "bg-yellow-50 border-yellow-300"
-                            : "bg-gray-50"
-                        }`}
-                    >
-                      <span className="text-sm">
-                        {q}
-                      </span>
-
-                      {completedQuestions.includes(q) ? (
-                        <span className="text-green-600 font-bold">
-                          ✓
-                        </span>
-                      ) : q === question ? (
-                        <span className="text-yellow-600 font-semibold">
-                          Current
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">
-                          Pending
-                        </span>
-                      )}
-                    </div>
-                  ))
-                )}
-
-              </div>
-
+              <a
+                href="/dashboard"
+                className="inline-flex items-center rounded-xl border border-slate-200 bg-white/60 px-8 py-4 font-semibold text-slate-700 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-slate-300 hover:bg-slate-50 hover:shadow-md"
+              >
+                View Dashboard
+              </a>
             </div>
-
           </div>
 
+          {/* RIGHT SIDE */}
+          <div className="hero-fade-up hero-delay-1 relative flex justify-center">
+            <div className="relative h-[420px] w-[420px]">
+              {/* Glow now truly centered behind the image via inset + margin auto,
+                  instead of an un-positioned absolute div */}
+              <div
+                aria-hidden
+                className="absolute inset-0 -z-10 m-auto h-[460px] w-[460px] rounded-full blur-3xl"
+                style={{
+                  background:
+                    "radial-gradient(circle, rgba(41,118,221,0.35), transparent 70%)",
+                }}
+              />
+
+              <img
+                src={heroRobot}
+                alt="AI interview coach"
+                className="h-full w-full rounded-[40px] object-cover shadow-2xl ring-1 ring-black/5"
+                style={{ boxShadow: "0 30px 80px -20px rgba(41,118,221,0.4)" }}
+              />
+
+              {/* Floating insight cards — grounded in the actual product
+                  (a live question + a real-time clarity score), not generic stats */}
+              <div className="hero-float-a absolute -left-8 top-8 hidden items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md sm:flex">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2976DD] opacity-60" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#2976DD]" />
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-slate-400">Now Asking</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    "Explain Big-O notation"
+                  </p>
+                </div>
+              </div>
+
+              <div className="hero-float-b absolute -right-6 bottom-10 hidden items-center gap-3 rounded-2xl border border-slate-100 bg-white/95 px-4 py-3 shadow-xl backdrop-blur-md sm:flex">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                  ✓
+                </span>
+                <div>
+                  <p className="text-xs font-medium text-slate-400">Clarity Score</p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    9.2 / 10 — Strong explanation
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature row — moved into normal flow, no longer absolutely
+            positioned at the viewport bottom where it could overlap content */}
+        <div className="hero-fade-up hero-delay-2 mt-16 border-t border-slate-100 pt-8">
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {FEATURES.map((f) => (
+              <FeaturePill key={f.label} icon={f.icon} label={f.label} />
+            ))}
+          </div>
         </div>
       </div>
 
-    </>
-  )
+      <style>{`
+        @keyframes heroFadeUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes heroFloatA {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-8px); }
+        }
+        @keyframes heroFloatB {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(8px); }
+        }
+        .hero-fade-up {
+          animation: heroFadeUp 0.7s ease-out both;
+        }
+        .hero-delay-1 { animation-delay: 0.15s; }
+        .hero-delay-2 { animation-delay: 0.3s; }
+        .hero-float-a { animation: heroFloatA 6s ease-in-out infinite; }
+        .hero-float-b { animation: heroFloatB 7s ease-in-out infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .hero-fade-up, .hero-float-a, .hero-float-b { animation: none; }
+        }
+      `}</style>
+    </main>
+  );
 }
-
-export default Home

@@ -4,15 +4,16 @@ import {
   Tooltip, Legend, ResponsiveContainer,
 } from "recharts";
 
-const data = [
-  { interview: "Interview 1", technicalScore: 5, date: "04/06/2026" },
-  { interview: "Interview 2", technicalScore: 7, date: "08/06/2026" },
-  { interview: "Interview 3", technicalScore: 8, date: "10/06/2026" },
-  { interview: "Interview 4", technicalScore: 6, date: "12/06/2026" },
-  { interview: "Interview 5", technicalScore: 9, date: "14/06/2026" },
-];
 
-export default function TechnicalScoreChart() {
+export default function TechnicalScoreChart({ Interview }) {
+  // console.log(Interview, "Interview data in line chart")
+
+  const chartData = Interview.map((item, index) => ({
+    interview: `${index + 1} (${item.stack || ""})`,
+    technicalScore: `${item.technicalScore}`,
+  })) || [];
+
+
   return (
     <div className="flex h-full w-full flex-col rounded-2xl border bg-white p-4 shadow-sm">
       <div className="mb-3">
@@ -22,7 +23,7 @@ export default function TechnicalScoreChart() {
 
       <div className="min-h-0 flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
+          <LineChart data={chartData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eef2f7" />
             <XAxis dataKey="interview" tick={{ fontSize: 12, fill: "#64748b" }} />
             <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 12, fill: "#64748b" }} />

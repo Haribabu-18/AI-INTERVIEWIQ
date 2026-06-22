@@ -53,7 +53,7 @@ function Layout() {
   return (
     <div className="h-screen flex overflow-hidden">
       {!hideSidebar && (
-        <div className="w-55 border">
+        <div className="w-[280px] flex-shrink-0">
           <Sidebar />
         </div>
       )}

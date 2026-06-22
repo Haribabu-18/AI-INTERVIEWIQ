@@ -73,8 +73,6 @@ async function getFeedbackFromAI({ message }) {
         return `${item.role} : ${item.content}`
     }).join("\n")
 
-
-
     try {
 
         // GEMINI AI

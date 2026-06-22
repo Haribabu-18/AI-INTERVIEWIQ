@@ -141,6 +141,8 @@ function interviewSocket(socket) {
 
         socket.emit("interview-result", savedInterview);
 
+        // socket.emit("speak-feedback", feedback);
+
         interviewSessions.delete(socket.id);
 
 
